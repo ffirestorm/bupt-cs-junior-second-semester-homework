@@ -1,0 +1,189 @@
+# On node1 ~
+# 下载安装包
+wget https://archive.apache.org/dist/zookeeper/zookeeper-3.4.6/zookeeper-3.4.6.tar.gz #下载 zookeeper 安装包
+wget https://archive.apache.org/dist/hbase/2.0.2/hbase-2.0.2-bin.tar.gz #下载 hbase 安装包
+# 将安装包移动到 "/usr/local" 目录下
+mv zookeeper-3.4.6.tar.gz /usr/local #移动 zookeeper
+mv hbase-2.0.2-bin.tar.gz /usr/local #移动 hbase
+# 解压安装
+cd /usr/local
+tar -zxvf zookeeper-3.4.6.tar.gz #解压安装 zookeeper
+tar -zxvf hbase-2.0.2-bin.tar.gz #解压安装 hbase
+# 建立软链接，便于后期版本更换
+ln -s zookeeper-3.4.6 zookeeper #建立 zookeeper 软链接
+ln -s hbase-2.0.2 hbase #建立 hbase 软链接
+
+# On node1~node4 respectively
+# 配置系统环境变量
+vim /etc/profile #改了就行，不一定用 vim 编辑器，比如 WinSCP 也行
+
+# 文件内容
+# for zookeeper
+export ZOOKEEPER_HOME=/usr/local/zookeeper
+export PATH=$ZOOKEEPER_HOME/bin:$PATH
+# for hbase
+export HBASE_HOME=/usr/local/hbase
+export PATH=$HBASE_HOME/bin:$HBASE_HOME/sbin:$PATH
+
+source /etc/profile #使环境变量生效,改完再运行
+
+# 配置 ZooKeeper
+cd /usr/local/zookeeper/conf #进入 ZooKeeper 配置文件所在目录
+cp zoo_sample.cfg zoo.cfg #拷贝配置文件
+# 修改配置文件，修改数据目录。
+vim zoo.cfg
+
+#文件内容
+dataDir=/usr/local/zookeeper/tmp
+# 在最后添加如下代码，server.1-4 是部署 ZooKeeper 的节点，1，2，3，4 分别是各服务器 /usr/local/zookeeper/tmp/myid 文件的内容。这里 192.168.0.xxx 对应的是运行 QuorumPeerMain 的服务器的内网 IP，需要改成自己集群的。
+server.1=node1iip:2888:3888
+server.2=node2iip:2888:3888
+server.3=node3iip:2888:3888
+server.4=node4iip:2888:3888
+
+# 创建 tmp 目录作数据目录。
+mkdir /usr/local/zookeeper/tmp
+# 在 tmp 目录中创建一个空文件 myid，并向该文件写入 ID。
+touch /usr/local/zookeeper/tmp/myid
+echo 1 > /usr/local/zookeeper/tmp/myid
+
+# 配置 HBase
+cd $HBASE_HOME/conf #进入 HBase 配置文件所在目录
+# 修改配置文件
+vim hbase-env.sh
+#修改环境变量 JAVA_HOME 为绝对路径,注意 JAVA_HOME 和 HBASE_LIBRARY_PATH 要与自己实际安装配置的一致，HBASE_MANAGES_ZK 设为 false。
+
+#文件内容
+export JAVA_HOME=/usr/lib/jvm/jdk8u292-b10
+export HBASE_MANAGES_ZK=false
+export HBASE_LIBRARY_PATH=/home/modules/hadoop-2.7.7/lib/native
+
+#修改 hbase-site.xml 文件。
+vim hbase-site.xml
+#添加或修改 configuration 标签范围内的部分参数。
+<configuration>
+  <property>
+    <name>hbase.rootdir</name>
+    <value>hdfs://node1:8020/HBase</value>
+  </property>
+  <property>
+    <name>hbase.tmp.dir</name>
+    <value>/usr/local/hbase/tmp</value>
+  </property>
+  <property>
+    <name>hbase.cluster.distributed</name>
+    <value>true</value>
+  </property>
+  <property>
+    <name>hbase.unsafe.stream.capability.enforce</name>
+    <value>false</value>
+  </property>
+  <property>
+    <name>hbase.zookeeper.quorum</name>
+    <value>node2:2181,node3:2181,node4:2181</value>
+  </property>
+  <property>
+    <name>hbase.unsafe.stream.capability.enforce</name>
+    <value>false</value>
+  </property>
+</configuration>
+
+#修改 regionservers 文件。
+vim regionservers
+
+#将 regionservers 文件内容替换为 agent 节点 IP（可用主机名代替,记得改名）。
+node2
+node3
+node4
+
+#拷贝 hadoop 目录下的的的 hdfs-site.xml 文件到“hbase/conf/”目录，可选择软链接或拷贝。
+cp /home/modules/hadoop-2.7.7/etc/hadoop/hdfs-site.xml /usr/local/hbase/conf/hdfs-site.xml
+
+# 分发 ZooKeeper 与 HBase
+#分发zookeeper
+scp -r /usr/local/zookeeper-3.4.6 root@node2:/usr/local
+scp -r /usr/local/zookeeper-3.4.6 root@node3:/usr/local
+scp -r /usr/local/zookeeper-3.4.6 root@node4:/usr/local
+
+#分发hbase
+for i in {2..4};
+do
+    scp -r /usr/local/hbase-2.0.2 root@node${i}:/usr/local/ ;
+done
+#或
+scp -r /usr/local/hbase-2.0.2 root@node2:/usr/local/
+scp -r /usr/local/hbase-2.0.2 root@node3:/usr/local/
+scp -r /usr/local/hbase-2.0.2 root@node4:/usr/local/
+
+#配置子节点 ZooKeeper 和 hbase
+# On node2
+cd /usr/local
+ln -s hbase-2.0.2 hbase
+ln -s zookeeper-3.4.6 zookeeper
+echo 2 > /usr/local/zookeeper/tmp/myid
+# On node3
+cd /usr/local
+ln -s hbase-2.0.2 hbase
+ln -s zookeeper-3.4.6 zookeeper
+echo 3 > /usr/local/zookeeper/tmp/myid
+# On node4
+cd /usr/local
+ln -s hbase-2.0.2 hbase
+ln -s zookeeper-3.4.6 zookeeper
+echo 4 > /usr/local/zookeeper/tmp/myid
+
+# 启动
+start-all.sh
+# On node1~node4 respectively
+cd /usr/local/zookeeper/bin
+./zkServer.sh start
+./zkServer.sh status
+# On node1
+/usr/local/hbase/bin/start-hbase.sh
+或
+start-hbase.sh
+jps
+
+#实践
+# 启动 Hadoop 集群
+# On node1
+start-all.sh
+#start-dfs.sh
+#start-yarn.sh
+hadoop dfsadmin -report #验证运行情况
+
+# 启动 Zookeeper 集群
+# 需要在 node{1..4}分别运行
+cd /
+./usr/local/zookeeper/bin/zkServer.sh stop #关闭zookeeper,首次不用运行
+./usr/local/zookeeper/bin/zkServer.sh start #启动
+./usr/local/zookeeper/bin/zkServer.sh status #状态查看
+
+# 启动 HBase 集群
+# On node1
+start-hbase.sh
+# 进入 HBase Shell 创建实验用表
+# 输入 hbase shell 进入 hbase 交互式环境
+hbase shell
+# 创建表格
+create 'member_user','cf1'
+# 向表“member_user”中插入数据
+put 'member_user','rk001','cf1:keyword','applicate'
+put 'member_user','rk002','cf1:keyword','OnePlus 5'
+put 'member_user','rk003','cf1:keyword','iphone 6s'
+# 扫描整个表
+scan 'member_user'
+
+cd ~
+hadoop fs -ls / #查看目录
+hadoop fs -ls -R / #查看目录及子目录下所文件
+hadoop jar MyHBase.jar org.namenumber.hbase.inputSource.Main
+hadoop fs -cat /tmp/member_user/part-m-00000 #查看内容
+
+补充指令:
+
+stop-all.sh
+#stop-dfs.sh
+#stop-yarn.sh
+./usr/local/zookeeper/bin/zkServer.sh stop #关闭zookeeper
+stop-hbase.sh #关闭hbase

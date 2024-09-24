@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <!-- 底部可变化的图片 -->
+    <ImageView
+        android:id="@+id/backgroundImageView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:contentDescription="背景图案" />
+
+    <!-- 半透明白色图层 -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#B0FFFFFF"/>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:ignore="ScrollViewCount">
+
+
+
+            <!-- 用于显示城市名称的 TextView -->
+            <TextView
+                android:id="@+id/cityNameTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/city_name"
+                android:textSize="40sp"
+                android:textStyle="bold"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="50dp"
+                android:textColor="@color/black"/>
+
+            <!-- 用于显示天气信息的容器布局 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/cityNameTextView"
+                android:orientation="vertical">
+
+                <!-- 用于显示当前温度的 TextView -->
+                <TextView
+                    android:id="@+id/locationCurrentTemperature"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/location_current_temp"
+                    android:textSize="100sp"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="50dp"
+                    android:textColor="@color/black"/>
+
+                <!-- 用于显示天气信息的 TextView -->
+                <TextView
+                    android:id="@+id/locationWeatherTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/weather_info"
+                    android:textSize="30sp"
+                    android:textStyle="bold"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="50dp"
+                    android:textColor="@color/black"/>
+
+                <!-- 用于"天气预测数据" TextView -->
+                <TextView
+                    android:id="@+id/hourlyWeatherTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/hourly_weather"
+                    android:textSize="40sp"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="30dp"
+                    android:textStyle="bold"
+                    android:textColor="@color/black"/>
+
+                <!-- 用于显示5日3小时天气信息的 TextView -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/hourlyWeatherRecyclerView"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="20dp" />
+            </LinearLayout>
+
+
+
+        </RelativeLayout>
+    </ScrollView>
+</FrameLayout>

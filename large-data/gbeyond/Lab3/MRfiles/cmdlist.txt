@@ -1,0 +1,27 @@
+ssh root@gby2019213693-0001
+# 启动 hadoop 并验证运行情况
+start-all.sh
+hadoop dfsadmin -report #验证运行情况
+
+hadoop fs -ls / #查看目录
+hadoop fs -ls -R / #查看目录及子目录下所文件
+hadoop fs -mkdir /testmr #创建testmr文件夹
+
+# 在~目录下
+# 传输input.txt到 testmr 文件夹下,指令二选一
+hadoop fs -put GuBoyang2019213693input.txt /test
+hadoop fs -put /root/GuBoyang2019213693input.txt /test
+# 使用“hadoop jar jar包名主函数”命令，在hadoop运行程序
+hadoop jar mrwc.jar wc.WordCount /testmr/GuBoyang2019213693input.txt /testmr/GuBoyang2019213693output #参数:运行jar包的指令,要运行的程序的完整路径,输入文件的路径,输出文件存放的文件夹
+
+# 做错了, 删除
+hadoop fs -rm -r -f /testm
+
+# 查看输出
+hadoop fs -cat /testmr/GuBoyang2019213693output/part-r-00000 #查看内容
+
+# 下载文件
+hadoop fs -get /testmr/GuBoyang2019213693output/part-r-00000 /root/testmr/GuBoyang2019213693output.txt #下载文件
+
+# 查看服务器ip
+ifconfig

@@ -1,0 +1,40 @@
+[versions]
+agp = "8.3.1"
+constraintlayoutVersion = "2.0.4"
+glide = "4.12.0"
+googleCloudTranslate = "1.95.1"
+junit = "4.13.2"
+junitVersion = "1.1.5"
+espressoCore = "3.5.1"
+appcompat = "1.7.0"
+material = "1.12.0"
+activity = "1.8.0"
+constraintlayout = "2.1.4"
+playServicesLocation = "21.3.0"
+playServicesLocationVersion = "18.0.0"
+recyclerviewVersion = "1.1.0"
+retrofit = "2.9.0"
+recyclerview = "1.3.2"
+
+[libraries]
+compiler = { module = "com.github.bumptech.glide:compiler", version.ref = "glide" }
+constraintlayout-v204 = { module = "androidx.constraintlayout:constraintlayout", version.ref = "constraintlayoutVersion" }
+converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "retrofit" }
+glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
+google-cloud-translate = { module = "com.google.cloud:google-cloud-translate", version.ref = "googleCloudTranslate" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
+espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
+constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
+play-services-location-v1800 = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocationVersion" }
+recyclerview-v110 = { module = "androidx.recyclerview:recyclerview", version.ref = "recyclerviewVersion" }
+retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
+recyclerview = { group = "androidx.recyclerview", name = "recyclerview", version.ref = "recyclerview" }
+
+[plugins]
+androidApplication = { id = "com.android.application", version.ref = "agp" }
+

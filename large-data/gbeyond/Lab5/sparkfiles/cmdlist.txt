@@ -1,0 +1,81 @@
+# 启动服务器，改hosts，注释掉127的地址
+
+
+# 登录服务器
+ssh root@node1ip
+ssh root@node2ip
+ssh root@node3ip
+ssh root@node4ip
+
+
+# 上传文件
+# sftp 版
+sftp root@node1ip
+lcd Filepath
+lpwd # 检查本机路径是否正确
+put spark-test.jar
+put spark-2.1.1-bin-hadoop2.7.tgz
+exit
+# scp 版
+scp spark-test.jar root@node1ip:~/
+scp spark-2.1.1-bin-hadoop2.7.tgz root@node1ip:~/
+
+
+# 安装spark
+start-all.sh
+# On node1~node4 respectively
+jps
+ifconfig #报告截图需要的内容
+# 第1-4张: 截图1-4
+
+# Only on node1
+hadoop jar ../home/modules/hadoop-2.7.7/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.7.7.jar pi 10 1
+# 或
+cd /
+hadoop jar ./home/modules/hadoop-2.7.7/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.7.7.jar pi 10 1
+# 第5张: 截图5
+ifconfig #报告截图需要的内容
+# 第6张: 截图6
+
+# Only on node1 ~
+tar -xzvf spark-2.1.1-bin-hadoop2.7.tgz -C ./ #解压 spark 压缩包
+# 配置环境变量
+cd ~ 或 cd /root/
+vim .bash_profile #修改用户变量，添加如下内容
+
+export HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop
+export HDFS_CONF_DIR=$HADOOP_HOME/etc/hadoop
+export YARN_CONF_DIR=$HADOOP_HOME/etc/hadoop
+export PATH=$PATH:/root/spark-2.1.1-bin-hadoop2.7/bin
+
+source .bash_profile #使添加变量生效
+stop-all.sh #停掉hadoop
+# 配置 yarn-site.xml 文件。
+cd ../home/modules/hadoop-2.7.7/etc/hadoop #进入文件所在目录
+vim yarn-site.xml #编辑配置文件，添加如下内容
+
+<property>
+  <name>yarn.nodemanager.pmem-check-enabled</name>
+  <value>false</value>
+</property>
+<property>
+  <name>yarn.nodemanager.vmem-check-enabled</name>
+  <value>false</value>
+</property>
+
+# 将 yarn-site.xml 文件发送到从节点:
+scp yarn-site.xml root@node2:/home/modules/hadoop-2.7.7/etc/hadoop/yarn-site.xml
+scp yarn-site.xml root@node3:/home/modules/hadoop-2.7.7/etc/hadoop/yarn-site.xml
+scp yarn-site.xml root@node4:/home/modules/hadoop-2.7.7/etc/hadoop/yarn-site.xml
+# 重启 Hadoop 集群。
+cd ~
+stop-all.sh
+start-all.sh
+jps #查看集群是否启动成功(结果应与图1-图4一致)；
+
+# 运行程序
+# 运行如下指令检验 spark 是否部署成功:
+spark-submit --class org.apache.spark.examples.SparkPi --master yarn --num-executors 4 --driver-memory 1g --executor-memory 1g --executor-cores 1 spark-2.1.1-bin-hadoop2.7/examples/jars/spark-examples_2.11-2.1.1.jar 10
+# 第7张: 截图7
+spark-shell #查看 spark 和 scala 版本信
+# 第8张: 截图8

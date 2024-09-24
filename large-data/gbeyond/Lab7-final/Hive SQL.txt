@@ -1,0 +1,30 @@
+//以下部分为我自己写的
+# 独立 UID 条数使用distinct()函数对 uid 字段去重，再用 count()函数统计出条数:
+select distinct uid from sogou_ext_20111230，
+count uid from sogou_ext_20111230;
+
+hive
+use sogou_100w
+exit
+ifconfig
+
+# 查询关键词平均长度统计。提示:先使用 split 函数对关键词进行切分，然后用 size()函数统计关键词的大小，然后再用 avg 函数获取长度的平均值：
+参考资料:https://blog.csdn.net/weixin_34234741/article/details/111897346
+https://blog.csdn.net/weixin_42384743/article/details/112014350?utm_medium=distribute.pc_aggpage_search_result.none-task-blog-2~aggregatepage~first_rank_ecpm_v1~rank_v31_ecpm-3-112014350.pc_agg_new_rank&utm_term=hive%E4%B8%AD%E7%9A%84avg%E5%87%BD%E6%95%B0&spm=1000.2123.3001.4430
+这里没用split，用的collect_list
+SELECT EmployeeNo,
+
+collect_list(FillinDate) FillinDate,
+
+collect_list(FillinDate)[size(collect_list(FillinDate))-1] FillinDate,
+
+size(collect_list(FillinDate))
+
+AVG（size(collect_list(FillinDate))）over (partition by cookieid order by createtime) as （size(collect_list(FillinDate))）
+
+FROM
+
+use sogou_100w
+
+
+

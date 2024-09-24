@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:ignore="ScrollViewCount">
+    <!-- 底部可变化的图片 -->
+    <ImageView
+        android:id="@+id/searchBackgroundImageView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:contentDescription="背景图案" />
+
+    <!-- 半透明白色图层 -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#A0FFFFFF"/>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <EditText
+                android:id="@+id/cityEditText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:hint="@string/enter_city_name"
+                android:layout_margin="30dp"
+                android:textSize="30sp"
+                android:autofillHints=""
+                android:inputType="text"
+                android:layout_marginTop="30dp"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentEnd="true"
+                android:textColor="@color/black"/>
+
+            <Button
+                android:id="@+id/searchButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/search"
+                android:textSize="20sp"
+                android:layout_below="@id/cityEditText"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="20dp"/>
+            <!--     用来显示温度信息       -->
+            <TextView
+                android:id="@+id/searchWeatherTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/search_weather"
+                android:textSize="100sp"
+                android:layout_below="@id/searchButton"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="40dp"
+                android:textColor="@color/black"/>
+
+
+            <!--用来显示天气状况图标-->
+            <ImageView
+                android:layout_width="150dp"
+                android:layout_height="150dp"
+                android:id="@+id/searchCurrentConditionImage"
+                android:layout_below="@id/searchWeatherTextView"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="20dp"/>
+
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/forecastLabelTextView"
+                android:text="forecast_label"
+                android:textSize="40sp"
+                android:textStyle="bold"
+                android:layout_below="@id/searchCurrentConditionImage"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="20dp"
+                android:textColor="@color/black"/>
+
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/hourlySearchWeatherRecyclerView"
+                android:layout_below="@id/forecastLabelTextView"
+                android:layout_gravity="center"
+                android:layout_marginTop="20dp" />
+
+
+        </RelativeLayout>
+    </ScrollView>
+
+</FrameLayout>

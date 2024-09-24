@@ -1,0 +1,1 @@
+EndPoint    ：   obs.cn-north-4.myhuaweicloud.com

@@ -1,0 +1,412 @@
+在自己的电脑上安装Python。安装python 可参考这个视频:<https://www.bilibili.com/video/BV17A411T73u/>(我后面会重置这个视频，修正一些错误)
+
+在本机上以管理员身份打开命令窗口
+# 用以下顺序安装不会出问题
+# 安装whl包的工具
+pip install wheel
+# pip 安装 matplotlib 包
+pip install matplotlib
+# pip 安装 pyhive(python 远程连接 hive)
+pip install pyhive
+# pip 安装 thrift(python 远程连接 hive)
+pip install thrift
+# pip 安装 thrift-sasl(必要的包)
+pip install thrift-sasl
+# pip 安装 sasl(python 远程连接 hive)
+# pip install sasl
+
+去官网下载支持的版本: https://www.lfd.uci.edu/~gohlke/pythonlibs/#sasl
+# 我的是Python3.9.6,所以下载的是sasl-0.3.1-cp39-cp39-win_amd64.whl
+
+# 查看pip包所在
+pip show pip
+# 找到这一行(后面的路径是我的安装路径，具体路径根据你自己的情况来)：Location: c:\program files\ide_env\python39\lib\site-packages
+将下载好的sasl包移动到以上目录
+# 进入pip包所在文件(上面找到的路径)
+cd c:\Program Files\IDE_Env\Python39\Lib\site-packages # 该路径为我的路径，具体路径根据实际情况来
+pip install sasl.whl # <!--TODO: 将 sasl.whl 替换为sasl包名完整名称-->
+
+在华为云安全组里开放10000端口
+启动服务器,改hosts
+
+# 登录服务器
+ssh root@node1ip
+ssh root@node2ip
+ssh root@node3ip
+ssh root@node4ip
+
+# 上传文件
+# sftp 版
+sftp root@node1ip
+lcd Filepath
+lpwd # 检查本机路径是否正确
+put mysql-5.7.30.tar.gz
+put apache-hive-2.1.1-bin.tar.gz
+put mysql-connector-java-5.1.28.jar
+put sogou.100w.utf8
+put extract.py
+exit
+
+# scp 版
+scp mysql-5.7.30.tar.gz root@node1ip:~/
+scp apache-hive-2.1.1-bin.tar.gz root@node1ip:~/
+scp mysql-connector-java-5.1.28.jar root@node1ip:~/
+scp sogou.100w.utf8 root@node1ip:~/
+scp extract.py root@node1ip:~/
+
+
+# 查看并卸载系统自带的 mariadb-lib 数据库
+# [root@master ~]#
+rpm -qa|grep mariadb
+# {结果
+# mariadb-5.5.68-1.el7.aarch64
+# mariadb-libs-5.5.68-1.el7.aarch64
+# end}
+yum -y remove mariadb-*
+
+# 添加 MySQL yum 源(首先确保能访问网络)；
+# 安装 mysql 所需依赖：
+yum install -y perl openssl openssl-devel libaio perl-JSON autoconf
+# 解压 mysql 安装包：
+tar -zxvf mysql-5.7.30.tar.gz
+# 进入 aarch64 目录，对 rpm 包进行安装:
+cd aarch64
+yum install *.rpm
+
+# 启动 MySQL
+systemctl start mysqld
+# 查看 MySQL 状态
+systemctl status mysqld
+
+# 修改 root 默认密码：
+# 查看 mysql 安装生成的随机默认密码(/var/log/mysqld.log 文件中)
+grep 'temporary password' /var/log/mysqld.log
+# 登录 mysql(密码为上图红框标注部分)
+mysql -uroot -p
+# 修改 mysql 密码为:MyNewPass4!
+ALTER USER 'root'@'localhost' IDENTIFIED BY 'MyNewPass4!';
+# 注意：mysql5.7 默认安装了密码安全检查插件(validate_password)，默认密码检查策略要求密码必须包含：大小写字母、数字和特殊符号，并且长度不能少于 8 位。否则会提示 ERROR
+MyNewPass4!
+# 修改 mysql 密码策略
+# 查看 msyql 密码策略的相关信息:
+SHOW variables like '%password%';
+exit;
+## {输出结果注意部分
+| validate_password_dictionary_file      |                 |
+| validate_password_length               | 8               |
+| validate_password_mixed_case_count     | 1               |
+| validate_password_number_count         | 1               |
+| validate_password_policy               | MEDIUM          |
+| validate_password_special_char_count   | 1               |
++----------------------------------------+-----------------+
+## end}
+
+# 向 my.cnf 文件中[mysqld]下添加如下配置(/etc/my.cnf)：
+vim /etc/my.cnf
+
+## {/etc/my.cnf:对比修改以下内容
+[mysqld]
+# 禁用密码策略
+validate_password = off
+init_connect='SET NAMES utf8'
+#
+# Remove leading # and set to the amount of RAM for the most important data
+# cache in MySQL. Start at 70% of total RAM for dedicated server, else 10%.
+# innodb_buffer_pool_size = 128M
+#
+# Remove leading # to turn on a very important data integrity option: logging
+# changes to the binary log between backups.
+# log_bin
+#
+# Remove leading # to set options mainly useful for reporting servers.
+# The server defaults are faster for transactions and fast SELECTs.
+# Adjust sizes as needed, experiment to find the optimal values.
+# join_buffer_size = 128M
+# sort_buffer_size = 2M
+# read_rnd_buffer_size = 2M
+datadir=/var/lib/mysql
+socket=/var/lib/mysql/mysql.sock
+# Disabling symbolic-links is recommended to prevent assorted security risks
+symbolic-links=0
+
+log-error=/var/log/mysqld.log
+pid-file=/var/run/mysqld/mysqld.pid
+# 添加 client 模块，输入 client 模块的相关编码格式;
+[client]
+# 配置默认编码为 utf8
+default-character-set=utf8
+## end}
+
+# 重新启动 mysql 服务使配置生效
+systemctl restart mysqld
+# 登录 mysql:
+mysql -uroot -p
+MyNewPass4!
+# 查看编码
+SHOW variables like '%character%';
+exit;
+ifconfig
+# TODO: 截图1.1, MySQL表格及ip
+
+# 启动 Hadoop
+start-all.sh
+# hadoop dfsadmin -report
+# 解压并安装 Hive
+cd ~
+tar -zxvf /root/apache-hive-2.1.1-bin.tar.gz
+
+# 向 MySQL 中添加 hadoop 用户和创建名为(hive)的数据库；
+# 登录 mysql
+mysql -uroot -p
+MyNewPass4!
+# 创建 hadoop 用户(密码:hadoop):
+grant all on *.* to hadoop@'%' identified by 'hadoop';
+grant all on *.* to hadoop@'localhost' identified by 'hadoop';
+grant all on *.* to hadoop@'master' identified by 'hadoop';
+flush privileges;
+# 创建数据库连接
+CREATE database hive;
+exit;
+
+# 配置 Hive ([root@master ~]#)
+# 进入 hive 安装目录下的配置目录:
+cd /root/apache-hive-2.1.1-bin/conf/
+# 创建 hive 配置文件并添加如下内容:
+touch hive-site.xml
+vim hive-site.xml
+## {hive-site.xml
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<configuration>
+    <property>
+        <name>hive.metastore.local</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>javax.jdo.option.ConnectionURL</name>
+        <value>jdbc:mysql://master:3306/hive?characterEncoding=UTF-8</value><!--TODO: master换成主节点名称,然后把注释删了-->
+    </property>
+    <property>
+        <name>javax.jdo.option.ConnectionDriverName</name>
+        <value>com.mysql.jdbc.Driver</value>
+    </property>
+    <property>
+        <name>javax.jdo.option.ConnectionUserName</name>
+        <value>hadoop</value>
+    </property>
+    <property>
+        <name>javax.jdo.option.ConnectionPassword</name>
+        <value>hadoop</value>
+    </property>
+    <property>
+        <name>hive.server2.authentication</name>
+        <value>NOSASL</value>
+    </property>
+</configuration>
+## end}
+
+# 复制 MySQL 连接驱动到 hive 根目录下的 lib 目录中：
+cp /root/mysql-connector-java-5.1.28.jar /root/apache-hive-2.1.1-bin/lib/
+cd /root/apache-hive-2.1.1-bin/lib/
+ll | grep mysql-connector-java-5.1.28.jar
+# 配置系统用户环境变量
+# 打开配置文件：
+cd ~
+vim /root/.bash_profile
+## {/root/.bash_profile
+#HIVE
+export HIVE_HOME=/root/apache-hive-2.1.1-bin
+export PATH=$PATH:$HIVE_HOME/bin
+## end}
+
+# 使环境变量生效
+source /root/.bash_profile
+# 初始化 Hive 元数据库。把 hive 的元数据都同步到 mysql 中
+schematool -dbType mysql -initSchema
+# 启动 hive 客户端
+hive
+# 退出:exit、quit、ctrl+c
+exit;
+ifconfig
+# TODO: 截图1.2, hive启动及ip
+
+# 数据预处理 ([root@master ~]#)
+cd ~
+# 对 sogou.100w.utf8 文件，用学号做种子，随机抽取 50 万条，构成新的数据集。执行以下指令(BUPT-ID 需替换为学号):
+python extract.py BUPT-ID
+# 查看数据内容
+head -1 sogou.100w.utf8
+# 查看总行数
+wc -l sogou.100w.utf8
+# 将时间字段拆分，添加年、月、日、小时字段
+awk -F '\t' '{print $0"\t"substr($1,1,4)"\t"substr($1,5,2)"\t"substr($1,7,2)"\t"substr($1,9,2)}' sogou.100w.utf8 > sogou.100w.utf8.1
+# 查看拓展后的字段
+head -3 sogou.100w.utf8.1
+# 在数据扩展的结果上，过滤第 2 个字段(UID)或者第 3 个字段(搜索关键词)为空的行
+awk -F"\t" '{if($2 != "" && $3 != "" && $2 != " " && $3 != " ") print $0}' sogou.100w.utf8.1 > sogou.100w.utf8.2
+# 重命名数据文件
+cp sogou.100w.utf8.2 sogou.100w.utf8
+
+# 加载数据到 HDFS 上:
+# 在 hdfs 上创建目录/sogou_ext/20111230
+hadoop fs -mkdir -p /sogou_ext/20111230
+# 上传数据
+hadoop fs -put sogou.100w.utf8 /sogou_ext/20111230
+
+# 基于 Hive 构建日志数据的数据仓库
+# 进入 hive 客户端命令行:
+hive
+# 查看数据库
+SHOW databases;
+# 创建数据库表
+CREATE database sogou_100w;
+# 使用数据库：
+use sogou_100w;
+# 创建扩展 4 个字段(年、月、日、小时)数据的外部表 sogou_ext_20111230
+CREATE EXTERNAL TABLE sogou_ext_20111230(
+ts STRING,
+uid STRING,
+keyword STRING,
+rank INT,
+`order` INT,
+url STRING,
+year INT,
+month INT,
+day INT,
+hour INT
+)
+COMMENT 'This is the sogou search data of extend data'
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY '\t'
+STORED AS TEXTFILE
+LOCATION '/sogou_ext/20111230';
+# 创建分区表 sogou_partition
+CREATE EXTERNAL TABLE sogou_partition(
+ts STRING,
+uid STRING,
+keyword STRING,
+rank INT,
+`order` INT,
+url STRING
+)
+COMMENT 'This is the sogou search data by partition'
+partitioned by (
+year INT,
+month INT,
+day INT,
+hour INT
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY '\t'
+STORED AS TEXTFILE;
+# 开启动态分区
+set hive.exec.dynamic.partition=true;
+set hive.exec.dynamic.partition.mode=nonstrict;
+# 往分区表中灌入表 sogou_ext_20111230 的数据
+INSERT OVERWRITE TABLE sogou_partition PARTITION(year,month,day,hour) SELECT * FROM sogou_ext_20111230;
+# (如果此处报错 Number of reduce tasks is set to 0 since there's no reduce operator 需要启动 yarn)
+# 查询分区表的结果：
+SELECT * FROM sogou_partition limit 3;
+
+# 数据分析需求
+# 计总条数
+SELECT count(*) FROM sogou_ext_20111230;
+# 统计非空查询条数，即关键词不为空或者 null,用 WHERE 语句排除关键词为 null 和空的字段，在此基础上用 count()函数统计.
+SELECT count(*) FROM sogou_ext_20111230 WHERE keyword is not null and keyword !='';
+# 无重复总条数(根据 ts、uid、keyword、url)先按照以上四个字段分组，再用 having 语句选出 count()数为 1 的记录为表 a，再用 count()函数统计表 a 中的条数。
+SELECT count(*) FROM (SELECT ts,uid,keyword,url FROM sogou_ext_20111230 GROUP BY ts,uid,keyword,url having count(*) =1) a;
+exit;
+ifconfig
+# TODO: 截图1.3, 该指令结果及ip
+
+# 独立 UID 条数使用distinct()函数对 uid 字段去重，再用 count()函数统计出条数:
+# 重新进入 hive 并切换数据库：
+hive
+use sogou_100w;
+# TODO: 自行设计查询语句
+SELECT count(DISTINCT uid) FROM sogou_ext_20111230;
+exit;
+ifconfig
+# TODO: 截图1.4, 该指令结果及ip
+
+# 实际需求分析：
+# 查询关键词平均长度统计。提示:先使用 split 函数对关键词进行切分，然后用 size()函数统计关键词的大小，然后再用 avg 函数获取长度的平均值：
+# 重新进入 hive 并切换数据库：
+hive
+use sogou_100w;
+# TODO: 自行设计查询语句
+# 方式一: 结果由点问题，用方式二吧
+SELECT AVG(LENGTH(keyword)) FROM sogou_ext_20111230;
+# 方式二
+SELECT avg(a.cnt) FROM (SELECT size(split(keyword,'s+')) AS cnt FROM sogou_ext_20111230) a;
+exit;
+ifconfig
+# TODO: 截图1.5, 该指令结果及ip
+
+# 重新进入 hive 并切换数据库：
+hive
+use sogou_100w;
+# 查询频度排名(频度最高的前 50 词)对关键词做 groupby，然后对每组进行 count()，再按照count()的结果进行倒序排序。
+SELECT keyword,count(*) AS cnt FROM sogou_ext_20111230 GROUP BY keyword order by cnt desc limit 50;
+记住，后面要用
+
+# UID 分析
+# UID 的查询次数分布(查询 1 次的 UID 个数，2 次的，3 次的，大于 3 次的 UID 个数)先按照 uid 分组，并用 count()函数对每组进行统计，然后再用 sum、if 函数对查询次数为 1，查询次数为 2，查询次数为3，查询次数大于 3 的 uid 进行统计
+SELECT SUM(IF(uids.cnt=1,1,0)),SUM(IF(uids.cnt=2,1,0)),SUM(IF(uids.cnt=3,1,0)),SUM(IF(uids.cnt>3,1,0)) FROM (SELECT uid,count(*) as cnt FROM sogou_ext_20111230 GROUP BY uid) uids;
+记住，后面可能要用
+# 查询次数大于 2 次的用户总数。提示：先对 uid 进行 groupby，并用 having 函数过滤出查询次数大于2 的用户，然后再用 count 函数统计用户的总数。
+# TODO: 自行设计查询语句(结果中需有 ip)
+# 方式一
+SELECT count(userNum1.uid) FROM ( SELECT uid,count(*) AS count FROM sogou_ext_20111230 GROUP BY uid having count > 2) userNum1;
+# 方式二
+SELECT SUM(IF(userNum2.cnt > 2, 1, 0)) FROM ( SELECT uid,count(*) AS cnt FROM sogou_ext_20111230 GROUP BY uid) userNum2;
+exit;
+ifconfig
+# TODO: 截图1.6, 该指令结果及ip
+
+# 用户行为分析
+# 重新进入 hive 并切换数据库：
+hive
+use sogou_100w;
+# 点击次数与 Rank 之间的关系分析: Rank 在 10 以内的点击次数
+SELECT count(*) FROM sogou_ext_20111230 WHERE rank < 11;
+# 直接输入 url 查询的点击次数。通过 WHERE 条件选出直接通过 url 查询的记录再用 count 函数进行统计
+SELECT count(*) FROM sogou_ext_20111230 WHERE keyword like '%www%';
+# 截图备用，part2分析要用
+exit;
+
+# 数据可视化
+# 修改 Hadoop 集群配置
+cd /home/modules/hadoop-2.7.7/etc/hadoop/
+vim core-site.xml
+# {core-site.xml:添加以下内容
+<property>
+    <name>hadoop.proxyuser.root.hosts</name>
+    <value>*</value>
+</property>
+<property>
+    <name>hadoop.proxyuser.root.groups</name>
+    <value>*</value>
+</property>
+## end}
+
+
+cd /home/modules/hadoop-2.7.7/etc/hadoop/
+# 分发配置好的core-site.xml
+scp core-site.xml root@node2:$PWD
+scp core-site.xml root@node3:$PWD
+scp core-site.xml root@node4:$PWD
+
+# 重启hadoop
+stop-all.sh
+start-all.sh
+hadoop dfsadmin -report
+
+# 开启 Hive 远程模式：
+hive --service metastore &
+hive --service hiveserver2 &
+
+# 在本机上
+# 进入KeywordTop10.py所在目录
+cd KeywordTop10.py所在目录
+python KeywordTop10.py

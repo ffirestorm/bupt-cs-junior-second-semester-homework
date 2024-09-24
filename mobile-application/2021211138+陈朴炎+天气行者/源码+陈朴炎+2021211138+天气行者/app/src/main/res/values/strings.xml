@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">天气行者</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="enter_city_name">enter_city_name</string>
+    <string name="search_weather">search_weather</string>
+    <string name="city_name">City Name</string>
+    <string name="weather_info">Weather Info</string>
+    <string name="location_current_temp">location_current_temp</string>
+    <string name="search">搜索</string>
+    <string name="hourly_weather">hourly_weather</string>
+    <string name="daily_weather">daily_weather</string>
+    <string name="forecast_weather">forecast_weather</string>
+</resources>
